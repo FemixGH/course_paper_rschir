@@ -33,6 +33,22 @@
         </div>
         
         <hr class="mb-5">
+        <form method="GET" action="{{ route('statistics') }}" class="mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">Начальная дата</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control" value="{{ $startDate }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">Конечная дата</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control" value="{{ $endDate }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">Применить</button>
+                </div>
+            </div>
+        </form>
+        
 
         <!-- Карточки общей информации -->
         <div class="row text-center mb-4">
@@ -79,9 +95,13 @@
         </div>
 
         <div class="text-center">
-            <a href="{{ route('statistics.download') }}" class="btn btn-success btn-lg shadow-sm">Скачать PDF</a>
+            <a 
+                href="{{ route('statistics.download', ['start_date' => $startDate, 'end_date' => $endDate]) }}" 
+                class="btn btn-success btn-lg shadow-sm">
+                Скачать PDF
+            </a>
         </div>
-    </div>
+        
 
     <script>
          // Подготовка данных для диаграммы категорий
