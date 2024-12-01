@@ -42,37 +42,47 @@ class TransactionController extends Controller
         return redirect()->route('transactions.index')->with('success', 'Transaction added successfully!');
     }
     
-    public function statistics()
-    {
-        $userId = Auth::id();
+    public function statistics(Request $request)
+{
+    $userId = Auth::id();
     
-        // Получение общей статистики
-        $totalIncome = Transaction::where('user_id', $userId)->where('type', 'income')->sum('amount');
-        $totalExpense = Transaction::where('user_id', $userId)->where('type', 'expense')->sum('amount');
-        $balance = $totalIncome - $totalExpense;
+    // Получение дат из фильтра
+    $startDate = $request->input('start_date', '1900-01-01');
+    $endDate = $request->input('end_date', now()->toDateString());
     
-        // Доходы и расходы по категориям
-        $categories = Transaction::select('description', DB::raw('SUM(amount) as total'))
-            ->where('user_id', $userId)
-            ->groupBy('description')
-            ->get();
-    
-        // Данные для графиков
-        $transactionsByDate = Transaction::select(
-            DB::raw('DATE(created_at) as date'),
-            DB::raw('SUM(CASE WHEN type = \'income\' THEN amount ELSE 0 END) as total_income'),
-            DB::raw('SUM(CASE WHEN type = \'expense\' THEN amount ELSE 0 END) as total_expense')
-        )
-            ->where('user_id', $userId)
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-    
-        // Генерация графиков (примерный код)
-        $this->generateCharts($categories, $transactionsByDate);
-    
-        return view('statistics', compact('totalIncome', 'totalExpense', 'balance', 'categories', 'transactionsByDate'));
-    }
+    // Получение общей статистики
+    $totalIncome = Transaction::where('user_id', $userId)
+        ->where('type', 'income')
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->sum('amount');
+    $totalExpense = Transaction::where('user_id', $userId)
+        ->where('type', 'expense')
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->sum('amount');
+    $balance = $totalIncome - $totalExpense;
+
+    // Доходы и расходы по категориям
+    $categories = Transaction::select('description', DB::raw('SUM(amount) as total'))
+        ->where('user_id', $userId)
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->groupBy('description')
+        ->get();
+
+    // Данные для графиков
+    $transactionsByDate = Transaction::select(
+        DB::raw('DATE(created_at) as date'),
+        DB::raw('SUM(CASE WHEN type = \'income\' THEN amount ELSE 0 END) as total_income'),
+        DB::raw('SUM(CASE WHEN type = \'expense\' THEN amount ELSE 0 END) as total_expense')
+    )
+        ->where('user_id', $userId)
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
+
+    return view('statistics', compact('totalIncome', 'totalExpense', 'balance', 'categories', 'transactionsByDate', 'startDate', 'endDate'));
+}
+
     
     private function generateCharts($categories, $transactionsByDate)
     {
@@ -121,47 +131,54 @@ class TransactionController extends Controller
 
     return $pdf->download('financial_statistics.pdf');
 }
-public function downloadStatisticsPDF()
-    {
-        $userId = Auth::id();
+public function downloadStatisticsPDF(Request $request)
+{
+    $userId = Auth::id();
 
-        // Получение данных для графиков
-        $totalIncome = Transaction::where('user_id', $userId)->where('type', 'income')->sum('amount');
-        $totalExpense = Transaction::where('user_id', $userId)->where('type', 'expense')->sum('amount');
-        $balance = $totalIncome - $totalExpense;
+    // Получение дат из фильтра
+    $startDate = $request->input('start_date', '1900-01-01');
+    $endDate = $request->input('end_date', now()->toDateString());
 
-        $categories = Transaction::select('description', DB::raw('SUM(amount) as total'))
-            ->where('user_id', $userId)
-            ->groupBy('description')
-            ->get();
+    // Статистика
+    $totalIncome = Transaction::where('user_id', $userId)
+        ->where('type', 'income')
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->sum('amount');
+    $totalExpense = Transaction::where('user_id', $userId)
+        ->where('type', 'expense')
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->sum('amount');
+    $balance = $totalIncome - $totalExpense;
 
-        $transactionsByDate = Transaction::select(
-            DB::raw('DATE(created_at) as date'),
-            DB::raw('SUM(CASE WHEN type = \'income\' THEN amount ELSE 0 END) as total_income'),
-            DB::raw('SUM(CASE WHEN type = \'expense\' THEN amount ELSE 0 END) as total_expense')
-        )
-            ->where('user_id', $userId)
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+    $categories = Transaction::select('description', DB::raw('SUM(amount) as total'))
+        ->where('user_id', $userId)
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->groupBy('description')
+        ->get();
 
-        // Генерация изображений графиков и передача в PDF
-        $chartPaths = $this->generateCharts($totalIncome, $totalExpense, $categories, $transactionsByDate);
+    $transactionsByDate = Transaction::select(
+        DB::raw('DATE(created_at) as date'),
+        DB::raw('SUM(CASE WHEN type = \'income\' THEN amount ELSE 0 END) as total_income'),
+        DB::raw('SUM(CASE WHEN type = \'expense\' THEN amount ELSE 0 END) as total_expense')
+    )
+        ->where('user_id', $userId)
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
 
-        $pdf = Pdf::loadView('pdf.statistics', [
-            'totalIncome' => $totalIncome,
-            'totalExpense' => $totalExpense,
-            'balance' => $balance,
-            'categories' => $categories,
-            'transactionsByDate' => $transactionsByDate,
-            'chartPaths' => $chartPaths,
-        ]);
+    // Генерация PDF
+    $pdf = Pdf::loadView('pdf.statistics', compact(
+        'totalIncome',
+        'totalExpense',
+        'balance',
+        'categories',
+        'transactionsByDate',
+        'startDate',
+        'endDate'
+    ));
 
-        return $pdf->download('Financial_Statistics.pdf');
-    }
-
-
-    
-
+    return $pdf->download("Financial_Statistics_{$startDate}_to_{$endDate}.pdf");
+}
 
 }
