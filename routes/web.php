@@ -21,4 +21,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
 });
 Route::middleware('auth')->get('/statistics', [TransactionController::class, 'statistics'])->name('statistics');
+Route::middleware('auth')->get('/statistics/download', [TransactionController::class, 'downloadPDF'])->name('statistics.download');
+Route::middleware('auth')->get('/statistics/pdf', [TransactionController::class, 'downloadPDF'])->name('statistics.pdf');
+Route::middleware('auth')->get('/statistics/download', [TransactionController::class, 'downloadStatisticsPDF'])->name('statistics.download');
+
 

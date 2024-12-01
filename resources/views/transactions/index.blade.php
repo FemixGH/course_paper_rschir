@@ -8,7 +8,11 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1>Ваши транзакции</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1>Ваши транзакции</h1>
+            <a href="{{ route('home') }}" class="btn btn-secondary">На главную</a>
+        </div>
+        
         <a href="{{ route('transactions.create') }}" class="btn btn-primary mb-3">Добавить транзакцию</a>
 
         @if(session('success'))

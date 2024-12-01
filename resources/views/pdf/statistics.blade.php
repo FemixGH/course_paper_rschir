@@ -57,10 +57,6 @@
         </table>
     </div>
 
-    <div class="section chart">
-        <h2>Диаграммы</h2>
-        <img src="data:image/png;base64, {!! base64_encode(file_get_contents(public_path('charts/category-chart.png'))) !!}" alt="Диаграмма по категориям">
-        <img src="data:image/png;base64, {!! base64_encode(file_get_contents(public_path('charts/time-chart.png'))) !!}" alt="Диаграмма по времени">
-    </div>
+   
 </body>
 </html>
