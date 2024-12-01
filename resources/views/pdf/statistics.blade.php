@@ -18,6 +18,9 @@
 </head>
 <body>
     <h1 style="text-align: center;">Финансовая статистика</h1>
+    <h2>Период отчёта</h2>
+<p>С <strong>{{ $startDate }}</strong> по <strong>{{ $endDate }}</strong></p>
+
 
     <div class="section">
         <h2>Общая информация</h2>
